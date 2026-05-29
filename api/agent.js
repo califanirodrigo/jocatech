@@ -1,7 +1,10 @@
 const agentInstructions = [
   "Voce e o Agente JocaTech, um assistente para um sistema de ordem de servico.",
+  "Fale de forma acolhedora, educada e humana, como um atendente tecnico prestativo.",
+  "Cumprimente de forma natural quando o usuario iniciar a conversa.",
   "Responda sempre em portugues do Brasil, de forma curta, clara e util.",
   "Identifique palavras-chave como cliente, OS, ordem, total, tecnico, status, desconto, telefone, equipamento, defeito, problema, itens, resumo e campos faltantes.",
+  "Antes de passar uma mensagem final com dados da OS, confira se faltam informacoes importantes e solicite esses dados ao usuario.",
   "Use apenas o contexto enviado pelo sistema para falar de clientes, ordens, valores e status.",
   "Nao invente dados. Se faltar informacao, diga exatamente o que precisa ser preenchido.",
   "Ajude o usuario a criar, revisar e entender ordens de servico."
@@ -55,6 +58,38 @@ function missingFields(order) {
     .map(([, label]) => label);
 }
 
+function missingFieldsForFinalMessage(order) {
+  const labels = {
+    clientName: "nome do cliente",
+    clientPhone: "telefone do cliente",
+    equipment: "equipamento",
+    problem: "defeito relatado",
+    technician: "responsavel tecnico"
+  };
+
+  return Object.entries(labels)
+    .filter(([key]) => !String(order[key] || "").trim())
+    .map(([, label]) => label);
+}
+
+function wantsFinalOrderMessage(text) {
+  return hasAny(text, [
+    "mensagem",
+    "mandar",
+    "enviar",
+    "passar",
+    "texto",
+    "resumo",
+    "resumir",
+    "resuma",
+    "dados da os",
+    "ordem atual",
+    "os atual",
+    "whatsapp",
+    "zap"
+  ]);
+}
+
 function buildLocalIntentReply(message, context) {
   const text = normalizeText(message);
   const order = currentOrder(context);
@@ -63,8 +98,12 @@ function buildLocalIntentReply(message, context) {
   const clientsCount = Number(context?.clientsCount) || 0;
   const ordersCount = Number(context?.ordersCount) || 0;
 
+  if (hasAny(text, ["oi", "ola", "olá", "bom dia", "boa tarde", "boa noite", "iniciar", "começar", "comecar"])) {
+    return "Olá, seja bem-vindo à JocaTech. Estou aqui para te ajudar com a ordem de serviço. Você quer consultar o total, revisar os dados da OS ou preparar uma mensagem para o cliente?";
+  }
+
   if (hasAny(text, ["ajuda", "comandos", "o que voce faz", "o que vc faz"])) {
-    return "Posso ajudar com: total da OS, dados do cliente, tecnico, status, equipamento, defeito, itens, resumo da OS e campos faltantes.";
+    return "Claro. Posso te ajudar com total da OS, dados do cliente, técnico, status, equipamento, defeito, itens, resumo da OS e campos faltantes. Se quiser, diga: 'preparar mensagem da OS'.";
   }
 
   if (hasAny(text, ["faltando", "falta", "pendente", "preencher", "completo", "completa"])) {
@@ -124,14 +163,17 @@ function buildLocalIntentReply(message, context) {
     }).join(" ");
   }
 
-  if (hasAny(text, ["resumo", "resumir", "resuma", "dados da os", "ordem atual", "os atual"])) {
+  if (wantsFinalOrderMessage(text)) {
+    const missing = missingFieldsForFinalMessage(order);
+    if (missing.length) {
+      return `Antes de preparar a mensagem da OS, preciso confirmar alguns dados: ${missing.join(", ")}. Preencha essas informações no cadastro ou me diga esses dados aqui.`;
+    }
+
     return [
-      `OS ${order.orderNumber || "sem numero"}, data ${formatDate(order.orderDate)}.`,
-      `Cliente: ${order.clientName || "nao informado"}.`,
-      `Equipamento: ${order.equipment || "nao informado"}.`,
-      `Status: ${order.status || "nao informado"}.`,
-      `Tecnico: ${order.technician || "nao informado"}.`,
-      `Total: ${formatCurrency(totals.grandTotal)}.`
+      `Perfeito, segue uma mensagem pronta:`,
+      `Olá, ${order.clientName}. Sua ordem de serviço ${order.orderNumber || ""} está com status "${order.status || "nao informado"}".`,
+      `Equipamento: ${order.equipment || "nao informado"}. Defeito relatado: ${order.problem || "nao informado"}.`,
+      `Responsável técnico: ${order.technician || "nao informado"}. Total: ${formatCurrency(totals.grandTotal)}.`
     ].join(" ");
   }
 

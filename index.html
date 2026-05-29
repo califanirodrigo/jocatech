@@ -1088,7 +1088,7 @@
         <button class="agent-close" id="agentCloseBtn" type="button" aria-label="Fechar agente">×</button>
       </div>
       <div class="agent-messages" id="agentMessages">
-        <div class="agent-message bot">Olá. Posso ajudar com clientes, ordens de serviço e dúvidas rápidas do sistema.</div>
+        <div class="agent-message bot">Olá, seja bem-vindo à JocaTech. Estou aqui para te ajudar com a ordem de serviço. Você quer consultar dados da OS ou preparar uma mensagem para o cliente?</div>
       </div>
       <form class="agent-form" id="agentForm">
         <input id="agentInput" autocomplete="off" placeholder="Digite sua mensagem...">
@@ -1590,7 +1590,7 @@
         return `O responsável técnico selecionado é ${getValue("technician") || "não informado"}.`;
       }
 
-      return "Ainda sou um painel local. Posso consultar clientes, ordens, total da OS e técnico selecionado. Para respostas com IA, é preciso conectar uma API de agente.";
+      return "Claro. Antes de preparar uma mensagem com os dados da OS, preciso entender o que você quer enviar. Posso ajudar com resumo da OS, total, cliente, técnico, status ou campos faltantes.";
     }
 
     async function buildAgentReply(text) {
