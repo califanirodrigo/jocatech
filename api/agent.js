@@ -1,22 +1,45 @@
 module.exports = async function handler(request, response) {
+  function send(statusCode, data) {
+    response.writeHead(statusCode, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store"
+    });
+    response.end(JSON.stringify(data));
+  }
+
+  async function readBody() {
+    if (request.body) {
+      return typeof request.body === "string" ? JSON.parse(request.body) : request.body;
+    }
+
+    return await new Promise((resolve, reject) => {
+      let body = "";
+      request.on("data", (chunk) => {
+        body += chunk;
+      });
+      request.on("end", () => resolve(body ? JSON.parse(body) : {}));
+      request.on("error", reject);
+    });
+  }
+
   if (request.method !== "POST") {
     response.setHeader("Allow", "POST");
-    response.status(405).json({ error: "Method not allowed" });
+    send(405, { error: "Method not allowed" });
     return;
   }
 
   if (!process.env.OPENAI_API_KEY) {
-    response.status(500).json({ error: "OPENAI_API_KEY não configurada no Vercel." });
+    send(500, { error: "OPENAI_API_KEY não configurada no Vercel." });
     return;
   }
 
   try {
-    const body = typeof request.body === "string" ? JSON.parse(request.body) : request.body || {};
+    const body = await readBody();
     const message = String(body.message || "").trim();
     const context = body.context || {};
 
     if (!message) {
-      response.status(400).json({ error: "Mensagem vazia." });
+      send(400, { error: "Mensagem vazia." });
       return;
     }
 
@@ -52,16 +75,16 @@ module.exports = async function handler(request, response) {
     const data = await openaiResponse.json();
 
     if (!openaiResponse.ok) {
-      response.status(openaiResponse.status).json({
+      send(openaiResponse.status, {
         error: data.error?.message || "Erro ao consultar o agente."
       });
       return;
     }
 
-    response.status(200).json({
+    send(200, {
       reply: data.output_text || "Não consegui gerar uma resposta agora."
     });
   } catch (error) {
-    response.status(500).json({ error: error.message || "Erro interno do agente." });
+    send(500, { error: error.message || "Erro interno do agente." });
   }
 };
