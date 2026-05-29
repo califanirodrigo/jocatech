@@ -1,0 +1,1861 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ordem de Serviço - JocaTech</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef5f2;
+      --panel: #ffffff;
+      --line: #cfddd8;
+      --text: #0b2f45;
+      --muted: #62717c;
+      --brand: #009f4d;
+      --brand-dark: #007f3d;
+      --brand-soft: #e9fbf0;
+      --accent: #e3332f;
+      --accent-dark: #b42318;
+      --navy: #07344d;
+      --danger: #b42318;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --shadow: 0 18px 45px rgba(7, 52, 77, 0.12);
+      --shadow-soft: 0 10px 24px rgba(7, 52, 77, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(0, 159, 77, 0.12), transparent 32%),
+        linear-gradient(135deg, #f7fbfa 0%, var(--bg) 48%, #f7fafa 100%);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 15px;
+      line-height: 1.45;
+      min-height: 100vh;
+    }
+
+    body.dark-mode {
+      --bg: #071411;
+      --panel: #0f1f1b;
+      --line: #24443b;
+      --text: #edf7f4;
+      --muted: #a6bbb5;
+      --brand-soft: #0f3326;
+      --navy: #dff8f0;
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.34);
+      --shadow-soft: 0 10px 24px rgba(0, 0, 0, 0.26);
+      background:
+        radial-gradient(circle at top left, rgba(0, 159, 77, 0.18), transparent 34%),
+        linear-gradient(135deg, #06110f 0%, #0b1916 52%, #111010 100%);
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    .app {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(207, 221, 216, 0.9);
+      border-bottom: 4px solid var(--brand);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow-soft);
+      padding: 16px 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-text {
+      min-width: 260px;
+      text-align: center;
+    }
+
+    .site-logo {
+      width: 92px;
+      height: 92px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      object-fit: contain;
+      padding: 0;
+      box-shadow: none;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: 0;
+      color: var(--navy);
+      text-transform: uppercase;
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      padding: 10px 16px;
+      font-weight: 700;
+      box-shadow: 0 8px 18px rgba(7, 52, 77, 0.07);
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+    }
+
+    .btn:hover {
+      border-color: #a8b5c0;
+      box-shadow: 0 12px 24px rgba(7, 52, 77, 0.11);
+      transform: translateY(-1px);
+    }
+
+    .btn.primary {
+      border-color: var(--brand);
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: #fff;
+    }
+
+    .btn.primary:hover {
+      background: linear-gradient(135deg, #00af58, var(--brand-dark));
+    }
+
+    .btn.danger {
+      border-color: #f3b5af;
+      color: var(--danger);
+      background: #fff8f7;
+    }
+
+    .theme-toggle {
+      width: 44px;
+      min-width: 44px;
+      padding: 0;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    body.dark-mode .topbar,
+    body.dark-mode .tab-list,
+    body.dark-mode .panel {
+      background: rgba(15, 31, 27, 0.94);
+      border-color: var(--line);
+    }
+
+    body.dark-mode .btn {
+      background: #142822;
+      border-color: var(--line);
+      color: var(--text);
+    }
+
+    body.dark-mode .btn.primary {
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: #fff;
+    }
+
+    body.dark-mode .btn.danger,
+    body.dark-mode .icon-btn {
+      background: #351715;
+      border-color: #65302b;
+      color: #ffb5ae;
+    }
+
+    body.dark-mode .field input,
+    body.dark-mode .field textarea,
+    body.dark-mode .field select,
+    body.dark-mode .items input,
+    body.dark-mode .total-box,
+    body.dark-mode .client-card,
+    body.dark-mode .empty {
+      background: #10221d;
+      border-color: var(--line);
+      color: var(--text);
+    }
+
+    body.dark-mode .site-logo {
+      background: transparent;
+      border: 0;
+    }
+
+    body.dark-mode .items th {
+      background: #142a24;
+      color: var(--text);
+    }
+
+    body.dark-mode .total-row:last-child,
+    body.dark-mode .pill {
+      background: var(--brand-soft);
+      color: var(--text);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .tabs {
+      display: grid;
+      gap: 16px;
+    }
+
+    .tab-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      border: 1px solid rgba(207, 221, 216, 0.9);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow-soft);
+      padding: 8px;
+    }
+
+    .tab-button {
+      min-height: 42px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 10px 16px;
+      font-weight: 800;
+      transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .tab-button:hover {
+      background: #f2f8f5;
+      color: var(--navy);
+    }
+
+    .tab-button.active {
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: #fff;
+      box-shadow: 0 10px 22px rgba(0, 159, 77, 0.22);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(207, 221, 216, 0.9);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--navy);
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 13px;
+      min-height: 19px;
+      text-align: right;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .field label {
+      color: #344150;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid #c7d2dc;
+      border-radius: var(--radius-sm);
+      background: #fbfdfc;
+      color: var(--text);
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+    }
+
+    .field textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
+      border-color: var(--brand);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(0, 159, 77, 0.14);
+    }
+
+    .span-2 { grid-column: span 2; }
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-7 { grid-column: span 7; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+
+    .items {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-top: 8px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+    }
+
+    .items th,
+    .items td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .items th {
+      background: #f2f8f5;
+      color: #344150;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .items input {
+      width: 100%;
+      border: 1px solid #c7d2dc;
+      border-radius: var(--radius-sm);
+      min-height: 36px;
+      padding: 7px 8px;
+      background: #fff;
+    }
+
+    .items .small {
+      width: 92px;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #f3b5af;
+      border-radius: 999px;
+      background: #fff8f7;
+      color: var(--danger);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .totals {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 14px;
+    }
+
+    .total-box {
+      min-width: 280px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: #fff;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .total-row:last-child {
+      border-bottom: 0;
+      background: var(--brand-soft);
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .clients-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      max-height: none;
+      overflow: auto;
+      padding-right: 0;
+    }
+
+    .client-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #fbfcfd;
+      padding: 12px;
+      box-shadow: 0 8px 18px rgba(7, 52, 77, 0.05);
+      text-align: left;
+      transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .client-card:hover {
+      border-color: var(--brand);
+      box-shadow: 0 12px 24px rgba(7, 52, 77, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .selectable-card {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .selectable-card input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--brand);
+      cursor: pointer;
+      margin-top: 2px;
+    }
+
+    .client-card strong {
+      display: block;
+    }
+
+    .client-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      word-break: break-word;
+    }
+
+    .order-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      background: var(--brand-soft);
+      color: var(--navy);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 8px;
+    }
+
+    .list-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .form-actions {
+      justify-content: flex-end;
+      margin: 22px 0 0;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .agent-launcher {
+      position: fixed;
+      right: 22px;
+      bottom: 24px;
+      z-index: 30;
+      width: 58px;
+      height: 58px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: #fff;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 18px 34px rgba(0, 159, 77, 0.28);
+      transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .agent-launcher:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 42px rgba(0, 159, 77, 0.34);
+    }
+
+    .agent-launcher svg {
+      width: 27px;
+      height: 27px;
+    }
+
+    .agent-panel {
+      position: fixed;
+      right: 22px;
+      bottom: 94px;
+      z-index: 31;
+      width: min(380px, calc(100vw - 32px));
+      max-height: min(620px, calc(100vh - 124px));
+      display: none;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+      border: 1px solid rgba(207, 221, 216, 0.9);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.97);
+      box-shadow: 0 24px 60px rgba(7, 52, 77, 0.18);
+    }
+
+    .agent-panel.open {
+      display: grid;
+    }
+
+    .agent-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: var(--brand-soft);
+    }
+
+    .agent-header strong {
+      color: var(--navy);
+      display: block;
+    }
+
+    .agent-header span {
+      color: var(--muted);
+      display: block;
+      font-size: 12px;
+    }
+
+    .agent-close {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .agent-messages {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      min-height: 220px;
+      overflow: auto;
+      padding: 14px;
+      background: #fbfdfc;
+    }
+
+    .agent-message {
+      max-width: 86%;
+      border-radius: 16px;
+      padding: 10px 12px;
+      font-size: 14px;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .agent-message.bot {
+      justify-self: start;
+      background: #eef8f3;
+      color: var(--text);
+      border-bottom-left-radius: 5px;
+    }
+
+    .agent-message.user {
+      justify-self: end;
+      background: var(--navy);
+      color: #fff;
+      border-bottom-right-radius: 5px;
+    }
+
+    .agent-form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      padding: 12px;
+      border-top: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .agent-form input {
+      min-height: 42px;
+      border: 1px solid #c7d2dc;
+      border-radius: 999px;
+      background: #fbfdfc;
+      color: var(--text);
+      outline: none;
+      padding: 10px 14px;
+    }
+
+    .agent-form input:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(0, 159, 77, 0.14);
+    }
+
+    .agent-send {
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--brand);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    body.dark-mode .agent-panel,
+    body.dark-mode .agent-form,
+    body.dark-mode .agent-close {
+      background: #10221d;
+      border-color: var(--line);
+      color: var(--text);
+    }
+
+    body.dark-mode .agent-header,
+    body.dark-mode .agent-message.bot {
+      background: #143429;
+    }
+
+    body.dark-mode .agent-messages,
+    body.dark-mode .agent-form input {
+      background: #0d1d19;
+      border-color: var(--line);
+      color: var(--text);
+    }
+
+    .empty {
+      color: var(--muted);
+      border: 1px dashed #b9c4ce;
+      border-radius: var(--radius-md);
+      padding: 18px;
+      text-align: center;
+      background: #fbfdfc;
+    }
+
+    .print-only {
+      display: none;
+    }
+
+    @media (max-width: 880px) {
+      .app {
+        padding: 16px;
+      }
+
+      .topbar {
+        align-items: stretch;
+        flex-direction: column;
+        border-radius: var(--radius-md);
+      }
+
+      .brand {
+        align-items: center;
+        justify-content: center;
+      }
+
+      .brand-text {
+        min-width: 0;
+        text-align: center;
+      }
+
+      .brand p {
+        font-size: 11px;
+        letter-spacing: 3px;
+      }
+
+      .site-logo {
+        width: 76px;
+        height: 76px;
+      }
+
+      .actions {
+        justify-content: stretch;
+      }
+
+      .btn {
+        flex: 1;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .span-2,
+      .span-3,
+      .span-4,
+      .span-5,
+      .span-6,
+      .span-7,
+      .span-8 {
+        grid-column: span 12;
+      }
+
+      .items {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+
+    @media print {
+      @page {
+        margin: 12mm;
+        size: A4;
+      }
+
+      body {
+        background: #fff;
+        color: #000;
+        font-size: 12px;
+      }
+
+      .app {
+        max-width: none;
+        padding: 0;
+      }
+
+      .topbar,
+      .grid,
+      .tabs,
+      .agent-launcher,
+      .agent-panel {
+        display: none;
+      }
+
+      .print-only {
+        display: block;
+      }
+
+      .print-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 24px;
+        border-bottom: 2px solid #111;
+        padding-bottom: 10px;
+        margin-bottom: 14px;
+      }
+
+      .print-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .print-logo {
+        width: 76px;
+        height: 76px;
+        object-fit: contain;
+        border-radius: 12px;
+      }
+
+      .print-header h1 {
+        margin: 0 0 4px;
+        font-size: 24px;
+        color: #07344d;
+      }
+
+      .print-os-number {
+        text-align: right;
+        font-weight: 700;
+      }
+
+      .print-section {
+        margin: 12px 0;
+      }
+
+      .print-section h2 {
+        border-bottom: 1px solid #aaa;
+        font-size: 14px;
+        margin: 0 0 7px;
+        padding-bottom: 4px;
+        text-transform: uppercase;
+      }
+
+      .print-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px 18px;
+      }
+
+      .print-grid div,
+      .print-text {
+        white-space: pre-wrap;
+      }
+
+      .print-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .print-table th,
+      .print-table td {
+        border: 1px solid #888;
+        padding: 6px;
+        text-align: left;
+      }
+
+      .print-table th {
+        background: #eee;
+      }
+
+      .print-total {
+        margin-left: auto;
+        width: 260px;
+      }
+
+      .signatures {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 34px;
+        margin-top: 54px;
+      }
+
+      .signature-line {
+        border-top: 1px solid #111;
+        padding-top: 6px;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <img class="site-logo" src="assets/jocatech-logo.png" alt="Logo JocaTech Tecnologia">
+        <div class="brand-text">
+          <h1>JocaTech</h1>
+          <p>Tecnologia</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="newOrderBtn" type="button">Nova OS</button>
+        <button class="btn theme-toggle" id="themeToggleBtn" type="button" title="Modo noturno" aria-label="Alternar modo noturno">☾</button>
+      </div>
+    </header>
+
+    <div class="tabs">
+      <nav class="tab-list" aria-label="Navegação principal">
+        <button class="tab-button active" type="button" data-tab="orderTab">Criar OS</button>
+        <button class="tab-button" type="button" data-tab="clientsTab">Clientes</button>
+        <button class="tab-button" type="button" data-tab="ordersTab">Ordens geradas</button>
+      </nav>
+
+      <section class="panel tab-panel active" id="orderTab">
+        <div class="section-title">
+          <h2>Ordem de Serviço</h2>
+          <div class="status" id="statusText" aria-live="polite"></div>
+        </div>
+        <form id="orderForm">
+          <div class="form-grid">
+            <div class="field span-3">
+              <label for="orderNumber">Número da OS</label>
+              <input id="orderNumber" name="orderNumber" autocomplete="off">
+            </div>
+            <div class="field span-3">
+              <label for="orderDate">Data</label>
+              <input id="orderDate" name="orderDate" type="date">
+            </div>
+            <div class="field span-3">
+              <label for="deliveryDate">Previsão</label>
+              <input id="deliveryDate" name="deliveryDate" type="date">
+            </div>
+            <div class="field span-3">
+              <label for="status">Status</label>
+              <select id="status" name="status">
+                <option>Aberta</option>
+                <option>Em andamento</option>
+                <option>Aguardando peça</option>
+                <option>Concluída</option>
+                <option>Cancelada</option>
+              </select>
+            </div>
+            <div class="field span-4">
+              <label for="technician">Responsável técnico</label>
+              <select id="technician" name="technician">
+                <option>Caio Cifarelli</option>
+                <option>Rodrigo Califani</option>
+              </select>
+            </div>
+
+            <div class="field span-6">
+              <label for="clientName">Cliente</label>
+              <input id="clientName" name="clientName" list="clientsDatalist" autocomplete="off" required>
+              <datalist id="clientsDatalist"></datalist>
+            </div>
+            <div class="field span-3">
+              <label for="clientPhone">Telefone</label>
+              <input id="clientPhone" name="clientPhone" inputmode="tel">
+            </div>
+            <div class="field span-3">
+              <label for="clientDocument">CPF/CNPJ</label>
+              <input id="clientDocument" name="clientDocument">
+            </div>
+            <div class="field span-6">
+              <label for="clientEmail">E-mail</label>
+              <input id="clientEmail" name="clientEmail" type="email">
+            </div>
+            <div class="field span-6">
+              <label for="clientAddress">Endereço</label>
+              <input id="clientAddress" name="clientAddress">
+            </div>
+
+            <div class="field span-4">
+              <label for="equipment">Equipamento</label>
+              <input id="equipment" name="equipment" placeholder="Notebook, celular, impressora...">
+            </div>
+            <div class="field span-4">
+              <label for="brandModel">Marca / Modelo</label>
+              <input id="brandModel" name="brandModel">
+            </div>
+            <div class="field span-4">
+              <label for="serialNumber">Nº de série</label>
+              <input id="serialNumber" name="serialNumber">
+            </div>
+            <div class="field span-12">
+              <label for="problem">Defeito relatado</label>
+              <textarea id="problem" name="problem"></textarea>
+            </div>
+            <div class="field span-12">
+              <label for="diagnosis">Diagnóstico / Serviço executado</label>
+              <textarea id="diagnosis" name="diagnosis"></textarea>
+            </div>
+            <div class="field span-12">
+              <label for="notes">Observações</label>
+              <textarea id="notes" name="notes"></textarea>
+            </div>
+          </div>
+
+          <div class="section-title" style="margin-top: 18px;">
+            <h2>Serviços e produtos</h2>
+            <button class="btn" id="addItemBtn" type="button">Adicionar item</button>
+          </div>
+
+          <table class="items" aria-label="Itens da ordem de serviço">
+            <thead>
+              <tr>
+                <th>Descrição</th>
+                <th>Qtd.</th>
+                <th>Valor un.</th>
+                <th>Total</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="itemsBody"></tbody>
+          </table>
+
+          <div class="totals">
+            <div class="total-box">
+              <div class="total-row">
+                <span>Subtotal</span>
+                <strong id="subtotalText">R$ 0,00</strong>
+              </div>
+              <div class="total-row">
+                <span>Desconto</span>
+                <div class="field" style="width: 150px;">
+                  <input id="discount" name="discount" type="number" min="0" step="0.01" value="0" aria-label="Desconto">
+                </div>
+              </div>
+              <div class="total-row">
+                <span>Total</span>
+                <strong id="grandTotalText">R$ 0,00</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="list-actions form-actions">
+            <button class="btn" id="saveOrderBtn" type="button">Salvar OS</button>
+            <button class="btn primary" id="pdfBtn" type="button">Salvar em PDF</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel tab-panel" id="clientsTab">
+        <div class="section-title">
+          <h2>Clientes cadastrados</h2>
+          <button class="btn danger" id="clearClientsBtn" type="button">Limpar</button>
+        </div>
+        <div class="list-actions">
+          <button class="btn" id="saveClientBtn" type="button">Salvar cliente</button>
+          <button class="btn" id="editSelectedClientBtn" type="button">Alterar selecionado</button>
+          <button class="btn danger" id="deleteSelectedClientsBtn" type="button">Excluir selecionados</button>
+        </div>
+        <div class="field" style="margin-bottom: 12px;">
+          <label for="clientSearch">Buscar cliente</label>
+          <input id="clientSearch" autocomplete="off">
+        </div>
+        <div class="clients-list" id="clientsList"></div>
+      </section>
+
+      <section class="panel tab-panel" id="ordersTab">
+        <div class="section-title">
+          <h2>Ordens geradas</h2>
+          <button class="btn danger" id="clearOrdersBtn" type="button">Limpar</button>
+        </div>
+        <div class="list-actions">
+          <button class="btn" id="editSelectedOrderBtn" type="button">Alterar selecionada</button>
+          <button class="btn danger" id="deleteSelectedOrdersBtn" type="button">Excluir selecionadas</button>
+        </div>
+        <div class="clients-list" id="ordersList"></div>
+      </section>
+    </div>
+
+    <section class="print-only" id="printOrder"></section>
+
+    <button class="agent-launcher" id="agentLauncherBtn" type="button" title="Abrir agente" aria-label="Abrir agente">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+      </svg>
+    </button>
+
+    <aside class="agent-panel" id="agentPanel" aria-label="Agente JocaTech">
+      <div class="agent-header">
+        <div>
+          <strong>Agente JocaTech</strong>
+          <span>Assistente da ordem de serviço</span>
+        </div>
+        <button class="agent-close" id="agentCloseBtn" type="button" aria-label="Fechar agente">×</button>
+      </div>
+      <div class="agent-messages" id="agentMessages">
+        <div class="agent-message bot">Olá. Posso ajudar com clientes, ordens de serviço e dúvidas rápidas do sistema.</div>
+      </div>
+      <form class="agent-form" id="agentForm">
+        <input id="agentInput" autocomplete="off" placeholder="Digite sua mensagem...">
+        <button class="agent-send" type="submit" aria-label="Enviar mensagem">➤</button>
+      </form>
+    </aside>
+  </main>
+
+  <script>
+    const storageKey = "jocatech_clientes";
+    const ordersStorageKey = "jocatech_ordens";
+    const themeStorageKey = "jocatech_tema";
+    const SUPABASE_URL = "https://ezxuqnizelwldpqyolkw.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6eHVxbml6ZWx3bGRwcXlvbGt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NTA3OTcsImV4cCI6MjA5NTEyNjc5N30.v6KZrAmkrEtBAIYOQ9ZVd3t0vSs8OU6LGsau8rsRVWE";
+    const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+    const form = document.getElementById("orderForm");
+    const itemsBody = document.getElementById("itemsBody");
+    const statusText = document.getElementById("statusText");
+    const clientsList = document.getElementById("clientsList");
+    const ordersList = document.getElementById("ordersList");
+    const clientsDatalist = document.getElementById("clientsDatalist");
+    const clientSearch = document.getElementById("clientSearch");
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
+    const agentLauncherBtn = document.getElementById("agentLauncherBtn");
+    const agentPanel = document.getElementById("agentPanel");
+    const agentCloseBtn = document.getElementById("agentCloseBtn");
+    const agentForm = document.getElementById("agentForm");
+    const agentInput = document.getElementById("agentInput");
+    const agentMessages = document.getElementById("agentMessages");
+
+    const fields = [
+      "orderNumber",
+      "orderDate",
+      "deliveryDate",
+      "status",
+      "technician",
+      "clientName",
+      "clientPhone",
+      "clientDocument",
+      "clientEmail",
+      "clientAddress",
+      "equipment",
+      "brandModel",
+      "serialNumber",
+      "problem",
+      "diagnosis",
+      "notes",
+      "discount"
+    ];
+
+    function todayDate() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function nextOrderNumber() {
+      const now = new Date();
+      const date = now.toISOString().slice(0, 10).replaceAll("-", "");
+      const time = String(now.getHours()).padStart(2, "0") + String(now.getMinutes()).padStart(2, "0");
+      return `OS-${date}-${time}`;
+    }
+
+    function getValue(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function setValue(id, value) {
+      document.getElementById(id).value = value || "";
+    }
+
+    function apiRequest(method, url, payload) {
+      if (window.location.protocol === "file:") {
+        return null;
+      }
+
+      try {
+        const request = new XMLHttpRequest();
+        request.open(method, url, false);
+        request.setRequestHeader("Content-Type", "application/json");
+        request.send(payload === undefined ? null : JSON.stringify(payload));
+
+        if (request.status >= 200 && request.status < 300) {
+          return request.responseText ? JSON.parse(request.responseText) : null;
+        }
+      } catch {
+        return null;
+      }
+
+      return null;
+    }
+
+    function supabaseEnabled() {
+      return SUPABASE_URL && SUPABASE_ANON_KEY;
+    }
+
+    function supabaseRequest(method, key, payload) {
+      if (!supabaseEnabled()) {
+        return null;
+      }
+
+      try {
+        const request = new XMLHttpRequest();
+        const baseUrl = SUPABASE_URL.replace(/\/$/, "");
+        const url = method === "GET"
+          ? `${baseUrl}/rest/v1/jocatech_app_data?key=eq.${encodeURIComponent(key)}&select=value`
+          : `${baseUrl}/rest/v1/jocatech_app_data?on_conflict=key&select=value`;
+        request.open(method, url, false);
+        request.setRequestHeader("apikey", SUPABASE_ANON_KEY);
+        request.setRequestHeader("Authorization", `Bearer ${SUPABASE_ANON_KEY}`);
+        request.setRequestHeader("Content-Type", "application/json");
+        request.setRequestHeader("Prefer", "return=representation,resolution=merge-duplicates");
+
+        if (method === "GET") {
+          request.send(null);
+        } else {
+          request.send(JSON.stringify({
+            key,
+            value: payload,
+            updated_at: new Date().toISOString()
+          }));
+        }
+
+        if (request.status >= 200 && request.status < 300) {
+          const response = request.responseText ? JSON.parse(request.responseText) : [];
+          return Array.isArray(response) && response[0] ? response[0].value : [];
+        }
+      } catch {
+        return null;
+      }
+
+      return null;
+    }
+
+    function loadClients() {
+      const supabaseClients = supabaseRequest("GET", "clients");
+      if (supabaseClients) return supabaseClients;
+
+      const sharedClients = apiRequest("GET", "/api/clients");
+      if (sharedClients) return sharedClients;
+
+      try {
+        return JSON.parse(localStorage.getItem(storageKey)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveClients(clients) {
+      supabaseRequest("POST", "clients", clients);
+      apiRequest("PUT", "/api/clients", clients);
+      localStorage.setItem(storageKey, JSON.stringify(clients));
+      renderClients();
+    }
+
+    function loadOrders() {
+      const supabaseOrders = supabaseRequest("GET", "orders");
+      if (supabaseOrders) return supabaseOrders;
+
+      const sharedOrders = apiRequest("GET", "/api/orders");
+      if (sharedOrders) return sharedOrders;
+
+      try {
+        return JSON.parse(localStorage.getItem(ordersStorageKey)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveOrders(orders) {
+      supabaseRequest("POST", "orders", orders);
+      apiRequest("PUT", "/api/orders", orders);
+      localStorage.setItem(ordersStorageKey, JSON.stringify(orders));
+      renderOrders();
+    }
+
+    function normalize(text) {
+      return (text || "").trim().toLowerCase();
+    }
+
+    function clientKey(client) {
+      return normalize(client.document || client.phone || client.name);
+    }
+
+    function selectedClientKeys() {
+      return [...document.querySelectorAll(".client-select:checked")].map((input) => input.value);
+    }
+
+    function selectedOrderIds() {
+      return [...document.querySelectorAll(".order-select:checked")].map((input) => input.value);
+    }
+
+    function currentClient() {
+      return {
+        name: getValue("clientName"),
+        phone: getValue("clientPhone"),
+        document: getValue("clientDocument"),
+        email: getValue("clientEmail"),
+        address: getValue("clientAddress"),
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    function upsertClient(showMessage = true) {
+      const client = currentClient();
+      if (!client.name) {
+        return false;
+      }
+
+      const clients = loadClients();
+      const currentKey = clientKey(client);
+      const index = clients.findIndex((item) => {
+        const itemKey = clientKey(item);
+        return itemKey === currentKey || normalize(item.name) === normalize(client.name);
+      });
+
+      if (index >= 0) {
+        clients[index] = { ...clients[index], ...client };
+      } else {
+        clients.push(client);
+      }
+
+      clients.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+      saveClients(clients);
+
+      if (showMessage) {
+        setStatus("Cliente salvo automaticamente.");
+      }
+      return true;
+    }
+
+    function fillClient(client) {
+      setValue("clientName", client.name);
+      setValue("clientPhone", client.phone);
+      setValue("clientDocument", client.document);
+      setValue("clientEmail", client.email);
+      setValue("clientAddress", client.address);
+      showTab("orderTab");
+      setStatus("Cliente carregado.");
+    }
+
+    function renderClients() {
+      const clients = loadClients();
+      const term = normalize(clientSearch.value);
+      const filtered = clients.filter((client) => {
+        return [client.name, client.phone, client.document, client.email].some((value) => normalize(value).includes(term));
+      });
+
+      clientsDatalist.innerHTML = clients
+        .map((client) => `<option value="${escapeHtml(client.name)}"></option>`)
+        .join("");
+
+      if (!filtered.length) {
+        clientsList.innerHTML = '<div class="empty">Nenhum cliente cadastrado ainda.</div>';
+        return;
+      }
+
+      clientsList.innerHTML = filtered.map((client, index) => `
+        <label class="client-card selectable-card">
+          <input class="client-select" type="checkbox" value="${escapeHtml(clientKey(client))}" data-client-index="${index}">
+          <span>
+            <strong>${escapeHtml(client.name)}</strong>
+            <span>${escapeHtml(client.phone || "Sem telefone")}</span>
+            <span>${escapeHtml(client.document || "Sem CPF/CNPJ")}</span>
+          </span>
+        </label>
+      `).join("");
+    }
+
+    function currentOrderRecord() {
+      const data = Object.fromEntries(fields.map((id) => [id, getValue(id)]));
+      const totals = updateTotals();
+
+      return {
+        id: data.orderNumber || nextOrderNumber(),
+        data,
+        items: readItems(),
+        totals,
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    function saveCurrentOrder(showMessage = true) {
+      if (!getValue("clientName")) {
+        setStatus("Informe o nome do cliente antes de salvar a OS.");
+        document.getElementById("clientName").focus();
+        return false;
+      }
+
+      const order = currentOrderRecord();
+      const orders = loadOrders();
+      const index = orders.findIndex((item) => item.id === order.id);
+
+      if (index >= 0) {
+        orders[index] = {
+          ...orders[index],
+          ...order,
+          createdAt: orders[index].createdAt || order.updatedAt
+        };
+      } else {
+        orders.push({
+          ...order,
+          createdAt: order.updatedAt
+        });
+      }
+
+      orders.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+      saveOrders(orders);
+
+      if (showMessage) {
+        setStatus("Ordem de serviço salva no navegador.");
+      }
+      return true;
+    }
+
+    function fillOrder(order) {
+      fields.forEach((id) => setValue(id, order.data?.[id] || ""));
+      itemsBody.innerHTML = "";
+
+      if (order.items?.length) {
+        order.items.forEach((item) => addItem(item));
+      } else {
+        addItem();
+      }
+
+      updateTotals();
+      showTab("orderTab");
+      setStatus("Ordem de serviço carregada.");
+    }
+
+    function renderOrders() {
+      const orders = loadOrders();
+
+      if (!orders.length) {
+        ordersList.innerHTML = '<div class="empty">Nenhuma ordem gerada ainda.</div>';
+        return;
+      }
+
+      ordersList.innerHTML = orders.map((order, index) => {
+        const data = order.data || {};
+        return `
+          <label class="client-card selectable-card">
+            <input class="order-select" type="checkbox" value="${escapeHtml(order.id)}" data-order-index="${index}">
+            <span>
+              <strong>${escapeHtml(data.orderNumber || order.id)}</strong>
+              <span>${escapeHtml(data.clientName || "Cliente não informado")}</span>
+              <span>${escapeHtml(formatDate(data.orderDate) || "Sem data")}</span>
+              <span class="order-meta">
+                <span class="pill">${escapeHtml(data.status || "Sem status")}</span>
+                <span class="pill">${escapeHtml(data.technician || "Sem técnico")}</span>
+                <span class="pill">${currency.format(order.totals?.grandTotal || 0)}</span>
+              </span>
+            </span>
+          </label>
+        `;
+      }).join("");
+    }
+
+    function addItem(item = {}) {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td><input class="item-description" value="${escapeHtml(item.description || "")}" placeholder="Serviço, peça ou produto"></td>
+        <td><input class="item-qty small" type="number" min="0" step="0.01" value="${item.qty ?? 1}"></td>
+        <td><input class="item-price small" type="number" min="0" step="0.01" value="${item.price ?? 0}"></td>
+        <td class="item-total">R$ 0,00</td>
+        <td><button class="icon-btn" type="button" title="Remover item">×</button></td>
+      `;
+      itemsBody.appendChild(row);
+      row.querySelectorAll("input").forEach((input) => input.addEventListener("input", updateTotals));
+      row.querySelector(".icon-btn").addEventListener("click", () => {
+        row.remove();
+        if (!itemsBody.children.length) {
+          addItem();
+        }
+        updateTotals();
+      });
+      updateTotals();
+    }
+
+    function readItems() {
+      return [...itemsBody.querySelectorAll("tr")].map((row) => {
+        const description = row.querySelector(".item-description").value.trim();
+        const qty = Number(row.querySelector(".item-qty").value) || 0;
+        const price = Number(row.querySelector(".item-price").value) || 0;
+        return {
+          description,
+          qty,
+          price,
+          total: qty * price
+        };
+      }).filter((item) => item.description || item.qty || item.price);
+    }
+
+    function updateTotals() {
+      let subtotal = 0;
+      [...itemsBody.querySelectorAll("tr")].forEach((row) => {
+        const qty = Number(row.querySelector(".item-qty").value) || 0;
+        const price = Number(row.querySelector(".item-price").value) || 0;
+        const total = qty * price;
+        row.querySelector(".item-total").textContent = currency.format(total);
+        subtotal += total;
+      });
+
+      const discount = Number(document.getElementById("discount").value) || 0;
+      const grandTotal = Math.max(0, subtotal - discount);
+      document.getElementById("subtotalText").textContent = currency.format(subtotal);
+      document.getElementById("grandTotalText").textContent = currency.format(grandTotal);
+      return { subtotal, discount, grandTotal };
+    }
+
+    function formatDate(value) {
+      if (!value) return "";
+      const [year, month, day] = value.split("-");
+      return `${day}/${month}/${year}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function setStatus(message) {
+      statusText.textContent = message;
+      window.clearTimeout(setStatus.timer);
+      setStatus.timer = window.setTimeout(() => {
+        statusText.textContent = "";
+      }, 2600);
+    }
+
+    function applyTheme(theme) {
+      const dark = theme === "dark";
+      document.body.classList.toggle("dark-mode", dark);
+      themeToggleBtn.textContent = dark ? "☀" : "☾";
+      themeToggleBtn.title = dark ? "Modo claro" : "Modo noturno";
+      themeToggleBtn.setAttribute("aria-label", dark ? "Alternar para modo claro" : "Alternar para modo noturno");
+    }
+
+    function showTab(tabId) {
+      document.querySelectorAll(".tab-button").forEach((button) => {
+        button.classList.toggle("active", button.dataset.tab === tabId);
+      });
+
+      document.querySelectorAll(".tab-panel").forEach((panel) => {
+        panel.classList.toggle("active", panel.id === tabId);
+      });
+    }
+
+    function toggleAgent(open) {
+      agentPanel.classList.toggle("open", open);
+      agentLauncherBtn.setAttribute("aria-expanded", open ? "true" : "false");
+
+      if (open) {
+        window.setTimeout(() => agentInput.focus(), 50);
+      }
+    }
+
+    function addAgentMessage(text, type = "bot") {
+      const message = document.createElement("div");
+      message.className = `agent-message ${type}`;
+      message.textContent = text;
+      agentMessages.appendChild(message);
+      agentMessages.scrollTop = agentMessages.scrollHeight;
+      return message;
+    }
+
+    function agentContext() {
+      const totals = updateTotals();
+      const order = Object.fromEntries(fields.map((id) => [id, getValue(id)]));
+
+      return {
+        order,
+        totals,
+        items: readItems(),
+        clientsCount: loadClients().length,
+        ordersCount: loadOrders().length
+      };
+    }
+
+    function buildLocalAgentReply(text) {
+      const message = normalize(text);
+
+      if (message.includes("cliente")) {
+        return `Você tem ${loadClients().length} cliente(s) cadastrado(s). Use a aba Clientes para alterar ou excluir registros.`;
+      }
+
+      if (message.includes("ordem") || message.includes("os")) {
+        return `Você tem ${loadOrders().length} ordem(ns) salva(s). A OS atual é ${getValue("orderNumber") || "sem número"} para ${getValue("clientName") || "cliente não informado"}.`;
+      }
+
+      if (message.includes("total") || message.includes("valor")) {
+        const totals = updateTotals();
+        return `O total atual da OS é ${currency.format(totals.grandTotal)}.`;
+      }
+
+      if (message.includes("tecnico") || message.includes("técnico")) {
+        return `O responsável técnico selecionado é ${getValue("technician") || "não informado"}.`;
+      }
+
+      return "Ainda sou um painel local. Posso consultar clientes, ordens, total da OS e técnico selecionado. Para respostas com IA, é preciso conectar uma API de agente.";
+    }
+
+    async function buildAgentReply(text) {
+      if (window.location.protocol === "file:") {
+        return buildLocalAgentReply(text);
+      }
+
+      try {
+        const response = await fetch("/api/agent", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message: text,
+            context: agentContext()
+          })
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          return data.error || "Não consegui acessar o agente agora.";
+        }
+
+        return data.reply || buildLocalAgentReply(text);
+      } catch {
+        return buildLocalAgentReply(text);
+      }
+    }
+
+    function buildPrintOrder() {
+      const data = Object.fromEntries(fields.map((id) => [id, getValue(id)]));
+      const items = readItems();
+      const totals = updateTotals();
+
+      document.getElementById("printOrder").innerHTML = `
+        <div class="print-header">
+          <div class="print-brand">
+            <img class="print-logo" src="assets/jocatech-logo.png" alt="Logo JocaTech Tecnologia">
+            <div>
+              <h1>JocaTech</h1>
+              <div>Ordem de Serviço</div>
+            </div>
+          </div>
+          <div class="print-os-number">
+            <div>${escapeHtml(data.orderNumber)}</div>
+            <div>Data: ${escapeHtml(formatDate(data.orderDate))}</div>
+            <div>Status: ${escapeHtml(data.status)}</div>
+            <div>Técnico: ${escapeHtml(data.technician)}</div>
+          </div>
+        </div>
+
+        <div class="print-section">
+          <h2>Cliente</h2>
+          <div class="print-grid">
+            <div><strong>Nome:</strong> ${escapeHtml(data.clientName)}</div>
+            <div><strong>Telefone:</strong> ${escapeHtml(data.clientPhone)}</div>
+            <div><strong>CPF/CNPJ:</strong> ${escapeHtml(data.clientDocument)}</div>
+            <div><strong>E-mail:</strong> ${escapeHtml(data.clientEmail)}</div>
+            <div style="grid-column: 1 / -1;"><strong>Endereço:</strong> ${escapeHtml(data.clientAddress)}</div>
+          </div>
+        </div>
+
+        <div class="print-section">
+          <h2>Equipamento</h2>
+          <div class="print-grid">
+            <div><strong>Equipamento:</strong> ${escapeHtml(data.equipment)}</div>
+            <div><strong>Marca / Modelo:</strong> ${escapeHtml(data.brandModel)}</div>
+            <div><strong>Nº de série:</strong> ${escapeHtml(data.serialNumber)}</div>
+            <div><strong>Previsão:</strong> ${escapeHtml(formatDate(data.deliveryDate))}</div>
+            <div><strong>Responsável técnico:</strong> ${escapeHtml(data.technician)}</div>
+          </div>
+        </div>
+
+        <div class="print-section">
+          <h2>Defeito relatado</h2>
+          <div class="print-text">${escapeHtml(data.problem)}</div>
+        </div>
+
+        <div class="print-section">
+          <h2>Diagnóstico / Serviço executado</h2>
+          <div class="print-text">${escapeHtml(data.diagnosis)}</div>
+        </div>
+
+        <div class="print-section">
+          <h2>Serviços e produtos</h2>
+          <table class="print-table">
+            <thead>
+              <tr>
+                <th>Descrição</th>
+                <th>Qtd.</th>
+                <th>Valor un.</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map((item) => `
+                <tr>
+                  <td>${escapeHtml(item.description)}</td>
+                  <td>${escapeHtml(item.qty)}</td>
+                  <td>${currency.format(item.price)}</td>
+                  <td>${currency.format(item.total)}</td>
+                </tr>
+              `).join("") || '<tr><td colspan="4">Nenhum item informado.</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="print-section print-total">
+          <table class="print-table">
+            <tbody>
+              <tr><th>Subtotal</th><td>${currency.format(totals.subtotal)}</td></tr>
+              <tr><th>Desconto</th><td>${currency.format(totals.discount)}</td></tr>
+              <tr><th>Total</th><td><strong>${currency.format(totals.grandTotal)}</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="print-section">
+          <h2>Observações</h2>
+          <div class="print-text">${escapeHtml(data.notes)}</div>
+        </div>
+
+        <div class="signatures">
+          <div class="signature-line">Assinatura do cliente</div>
+          <div class="signature-line">${escapeHtml(data.technician || "Responsável técnico")}</div>
+        </div>
+      `;
+    }
+
+    function resetOrder() {
+      form.reset();
+      itemsBody.innerHTML = "";
+      setValue("orderNumber", nextOrderNumber());
+      setValue("orderDate", todayDate());
+      setValue("discount", "0");
+      addItem({ description: "Mão de obra", qty: 1, price: 0 });
+      updateTotals();
+      setStatus("Nova ordem criada.");
+    }
+
+    document.getElementById("addItemBtn").addEventListener("click", () => addItem());
+    document.getElementById("newOrderBtn").addEventListener("click", resetOrder);
+    document.getElementById("saveOrderBtn").addEventListener("click", () => {
+      upsertClient(false);
+      saveCurrentOrder(true);
+    });
+    document.getElementById("saveClientBtn").addEventListener("click", () => upsertClient(true));
+    document.getElementById("clearClientsBtn").addEventListener("click", () => {
+      if (confirm("Deseja apagar todos os clientes cadastrados neste navegador?")) {
+        saveClients([]);
+        setStatus("Clientes cadastrados removidos.");
+      }
+    });
+    document.getElementById("editSelectedClientBtn").addEventListener("click", () => {
+      const keys = selectedClientKeys();
+      if (keys.length !== 1) {
+        setStatus("Marque apenas um cliente para alterar.");
+        return;
+      }
+
+      const client = loadClients().find((item) => clientKey(item) === keys[0]);
+      if (client) {
+        fillClient(client);
+      }
+    });
+    document.getElementById("deleteSelectedClientsBtn").addEventListener("click", () => {
+      const keys = selectedClientKeys();
+      if (!keys.length) {
+        setStatus("Marque pelo menos um cliente para excluir.");
+        return;
+      }
+
+      if (confirm(`Deseja excluir ${keys.length} cliente(s) selecionado(s)?`)) {
+        const keep = loadClients().filter((client) => !keys.includes(clientKey(client)));
+        saveClients(keep);
+        setStatus("Cliente(s) selecionado(s) excluído(s).");
+      }
+    });
+    document.getElementById("clearOrdersBtn").addEventListener("click", () => {
+      if (confirm("Deseja apagar todas as ordens salvas neste navegador?")) {
+        saveOrders([]);
+        setStatus("Ordens salvas removidas.");
+      }
+    });
+    document.getElementById("editSelectedOrderBtn").addEventListener("click", () => {
+      const ids = selectedOrderIds();
+      if (ids.length !== 1) {
+        setStatus("Marque apenas uma OS para alterar.");
+        return;
+      }
+
+      const order = loadOrders().find((item) => item.id === ids[0]);
+      if (order) {
+        fillOrder(order);
+      }
+    });
+    document.getElementById("deleteSelectedOrdersBtn").addEventListener("click", () => {
+      const ids = selectedOrderIds();
+      if (!ids.length) {
+        setStatus("Marque pelo menos uma OS para excluir.");
+        return;
+      }
+
+      if (confirm(`Deseja excluir ${ids.length} ordem(ns) selecionada(s)?`)) {
+        const keep = loadOrders().filter((order) => !ids.includes(order.id));
+        saveOrders(keep);
+        setStatus("Ordem(ns) selecionada(s) excluída(s).");
+      }
+    });
+    document.getElementById("discount").addEventListener("input", updateTotals);
+    clientSearch.addEventListener("input", renderClients);
+    themeToggleBtn.addEventListener("click", () => {
+      const nextTheme = document.body.classList.contains("dark-mode") ? "light" : "dark";
+      localStorage.setItem(themeStorageKey, nextTheme);
+      applyTheme(nextTheme);
+    });
+    agentLauncherBtn.addEventListener("click", () => {
+      toggleAgent(!agentPanel.classList.contains("open"));
+    });
+    agentCloseBtn.addEventListener("click", () => toggleAgent(false));
+    agentForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const text = agentInput.value.trim();
+      if (!text) return;
+
+      addAgentMessage(text, "user");
+      agentInput.value = "";
+      const waitingMessage = addAgentMessage("Pensando...", "bot");
+      waitingMessage.textContent = await buildAgentReply(text);
+    });
+
+    document.querySelectorAll(".tab-button").forEach((button) => {
+      button.addEventListener("click", () => showTab(button.dataset.tab));
+    });
+
+    ["clientName", "clientPhone", "clientDocument", "clientEmail", "clientAddress"].forEach((id) => {
+      document.getElementById(id).addEventListener("change", () => upsertClient(false));
+    });
+
+    document.getElementById("clientName").addEventListener("input", () => {
+      const name = normalize(getValue("clientName"));
+      const client = loadClients().find((item) => normalize(item.name) === name);
+      if (client) {
+        fillClient(client);
+      }
+    });
+
+    document.getElementById("pdfBtn").addEventListener("click", () => {
+      if (!getValue("clientName")) {
+        setStatus("Informe o nome do cliente antes de gerar a OS.");
+        document.getElementById("clientName").focus();
+        return;
+      }
+
+      upsertClient(false);
+      saveCurrentOrder(false);
+      buildPrintOrder();
+      window.print();
+    });
+
+    applyTheme(localStorage.getItem(themeStorageKey) || "light");
+    resetOrder();
+    renderClients();
+    renderOrders();
+  </script>
+</body>
+</html>
