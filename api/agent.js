@@ -1,10 +1,146 @@
 const agentInstructions = [
   "Voce e o Agente JocaTech, um assistente para um sistema de ordem de servico.",
   "Responda sempre em portugues do Brasil, de forma curta, clara e util.",
+  "Identifique palavras-chave como cliente, OS, ordem, total, tecnico, status, desconto, telefone, equipamento, defeito, problema, itens, resumo e campos faltantes.",
   "Use apenas o contexto enviado pelo sistema para falar de clientes, ordens, valores e status.",
   "Nao invente dados. Se faltar informacao, diga exatamente o que precisa ser preenchido.",
   "Ajude o usuario a criar, revisar e entender ordens de servico."
 ].join(" ");
+
+function normalizeText(text) {
+  return String(text || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  }).format(Number(value) || 0);
+}
+
+function formatDate(value) {
+  if (!value) return "nao informada";
+  const [year, month, day] = String(value).split("-");
+  return year && month && day ? `${day}/${month}/${year}` : value;
+}
+
+function hasAny(text, words) {
+  return words.some((word) => text.includes(word));
+}
+
+function currentOrder(context) {
+  return context?.order || {};
+}
+
+function currentTotals(context) {
+  return context?.totals || {};
+}
+
+function missingFields(order) {
+  const labels = {
+    clientName: "cliente",
+    clientPhone: "telefone",
+    equipment: "equipamento",
+    problem: "defeito relatado",
+    technician: "responsavel tecnico",
+    status: "status",
+    orderDate: "data"
+  };
+
+  return Object.entries(labels)
+    .filter(([key]) => !String(order[key] || "").trim())
+    .map(([, label]) => label);
+}
+
+function buildLocalIntentReply(message, context) {
+  const text = normalizeText(message);
+  const order = currentOrder(context);
+  const totals = currentTotals(context);
+  const items = Array.isArray(context?.items) ? context.items : [];
+  const clientsCount = Number(context?.clientsCount) || 0;
+  const ordersCount = Number(context?.ordersCount) || 0;
+
+  if (hasAny(text, ["ajuda", "comandos", "o que voce faz", "o que vc faz"])) {
+    return "Posso ajudar com: total da OS, dados do cliente, tecnico, status, equipamento, defeito, itens, resumo da OS e campos faltantes.";
+  }
+
+  if (hasAny(text, ["faltando", "falta", "pendente", "preencher", "completo", "completa"])) {
+    const missing = missingFields(order);
+    return missing.length
+      ? `Ainda falta preencher: ${missing.join(", ")}.`
+      : "A OS tem os campos principais preenchidos.";
+  }
+
+  if (hasAny(text, ["total", "valor", "preco", "preço", "subtotal", "desconto"])) {
+    return [
+      `Subtotal: ${formatCurrency(totals.subtotal)}.`,
+      `Desconto: ${formatCurrency(totals.discount)}.`,
+      `Total: ${formatCurrency(totals.grandTotal)}.`
+    ].join(" ");
+  }
+
+  if (hasAny(text, ["cliente", "nome", "cpf", "cnpj", "documento", "email", "e-mail", "telefone", "contato", "endereco", "endereço"])) {
+    if (!order.clientName) return "Nenhum cliente foi informado na OS atual.";
+    return [
+      `Cliente: ${order.clientName}.`,
+      `Telefone: ${order.clientPhone || "nao informado"}.`,
+      `CPF/CNPJ: ${order.clientDocument || "nao informado"}.`,
+      `E-mail: ${order.clientEmail || "nao informado"}.`,
+      `Endereco: ${order.clientAddress || "nao informado"}.`
+    ].join(" ");
+  }
+
+  if (hasAny(text, ["tecnico", "responsavel", "caio", "rodrigo"])) {
+    return `Responsavel tecnico selecionado: ${order.technician || "nao informado"}.`;
+  }
+
+  if (hasAny(text, ["status", "situacao", "situação", "andamento"])) {
+    return `Status da OS: ${order.status || "nao informado"}.`;
+  }
+
+  if (hasAny(text, ["equipamento", "aparelho", "modelo", "marca", "serie", "serial"])) {
+    return [
+      `Equipamento: ${order.equipment || "nao informado"}.`,
+      `Marca/modelo: ${order.brandModel || "nao informado"}.`,
+      `Numero de serie: ${order.serialNumber || "nao informado"}.`
+    ].join(" ");
+  }
+
+  if (hasAny(text, ["defeito", "problema", "diagnostico", "diagnóstico", "servico", "serviço", "observacao", "observação"])) {
+    return [
+      `Defeito relatado: ${order.problem || "nao informado"}.`,
+      `Diagnostico/servico: ${order.diagnosis || "nao informado"}.`,
+      `Observacoes: ${order.notes || "nao informado"}.`
+    ].join(" ");
+  }
+
+  if (hasAny(text, ["item", "itens", "produto", "peca", "peça", "mao de obra", "mão de obra"])) {
+    if (!items.length) return "Nenhum item foi adicionado na OS atual.";
+    return items.map((item, index) => {
+      return `${index + 1}. ${item.description || "Item sem descricao"} - qtd. ${item.qty || 0} - total ${formatCurrency(item.total)}.`;
+    }).join(" ");
+  }
+
+  if (hasAny(text, ["resumo", "resumir", "resuma", "dados da os", "ordem atual", "os atual"])) {
+    return [
+      `OS ${order.orderNumber || "sem numero"}, data ${formatDate(order.orderDate)}.`,
+      `Cliente: ${order.clientName || "nao informado"}.`,
+      `Equipamento: ${order.equipment || "nao informado"}.`,
+      `Status: ${order.status || "nao informado"}.`,
+      `Tecnico: ${order.technician || "nao informado"}.`,
+      `Total: ${formatCurrency(totals.grandTotal)}.`
+    ].join(" ");
+  }
+
+  if (hasAny(text, ["quantos", "quantidade", "cadastrados", "salvos", "salvas", "banco"])) {
+    return `Ha ${clientsCount} cliente(s) cadastrado(s) e ${ordersCount} ordem(ns) salva(s).`;
+  }
+
+  return null;
+}
 
 module.exports = async function handler(request, response) {
   function send(statusCode, data) {
@@ -126,6 +262,12 @@ module.exports = async function handler(request, response) {
 
     if (!message) {
       send(400, { error: "Mensagem vazia." });
+      return;
+    }
+
+    const localReply = buildLocalIntentReply(message, context);
+    if (localReply) {
+      send(200, { reply: localReply, source: "local-intent" });
       return;
     }
 
