@@ -1101,6 +1101,7 @@
     const storageKey = "jocatech_clientes";
     const ordersStorageKey = "jocatech_ordens";
     const themeStorageKey = "jocatech_tema";
+    const agentSessionStorageKey = "jocatech_chat_session";
     const SUPABASE_URL = "https://ezxuqnizelwldpqyolkw.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6eHVxbml6ZWx3bGRwcXlvbGt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NTA3OTcsImV4cCI6MjA5NTEyNjc5N30.v6KZrAmkrEtBAIYOQ9ZVd3t0vSs8OU6LGsau8rsRVWE";
     const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -1119,10 +1120,19 @@
     const agentForm = document.getElementById("agentForm");
     const agentInput = document.getElementById("agentInput");
     const agentMessages = document.getElementById("agentMessages");
+    const savedAgentSession = (() => {
+      try {
+        return JSON.parse(localStorage.getItem(agentSessionStorageKey)) || {};
+      } catch {
+        return {};
+      }
+    })();
     const agentSession = {
-      orderNumber: "",
-      phone: "",
-      name: ""
+      id: savedAgentSession.id || (window.crypto?.randomUUID ? window.crypto.randomUUID() : `chat-${Date.now()}`),
+      orderNumber: savedAgentSession.orderNumber || "",
+      phone: savedAgentSession.phone || "",
+      name: savedAgentSession.name || "",
+      messages: Array.isArray(savedAgentSession.messages) ? savedAgentSession.messages : []
     };
 
     const fields = [
@@ -1553,12 +1563,44 @@
       }
     }
 
-    function addAgentMessage(text, type = "bot") {
+    function restoreAgentMessages() {
+      if (!agentSession.messages.length) return;
+
+      agentMessages.innerHTML = "";
+      agentSession.messages.slice(-12).forEach((item) => {
+        const type = item.role === "cliente" ? "user" : "bot";
+        addAgentMessage(item.text, type, false);
+      });
+    }
+
+    function persistAgentSession() {
+      localStorage.setItem(agentSessionStorageKey, JSON.stringify({
+        ...agentSession,
+        messages: agentSession.messages.slice(-20)
+      }));
+    }
+
+    function rememberAgentMessage(role, text) {
+      agentSession.messages.push({
+        role,
+        text,
+        at: new Date().toISOString()
+      });
+      agentSession.messages = agentSession.messages.slice(-20);
+      persistAgentSession();
+    }
+
+    function addAgentMessage(text, type = "bot", persist = true) {
       const message = document.createElement("div");
       message.className = `agent-message ${type}`;
       message.textContent = text;
       agentMessages.appendChild(message);
       agentMessages.scrollTop = agentMessages.scrollHeight;
+
+      if (persist) {
+        rememberAgentMessage(type === "user" ? "cliente" : "agente", text);
+      }
+
       return message;
     }
 
@@ -1582,6 +1624,8 @@
       if (nameMatch) {
         agentSession.name = nameMatch[1].trim();
       }
+
+      persistAgentSession();
     }
 
     function findMatchedOrder() {
@@ -1618,6 +1662,7 @@
       return {
         clientMode: true,
         session: { ...agentSession },
+        history: agentSession.messages.slice(-12),
         matchedOrder,
         matchedClient,
         order,
@@ -1878,8 +1923,10 @@
       addAgentMessage(text, "user");
       updateAgentSession(text);
       agentInput.value = "";
-      const waitingMessage = addAgentMessage("Pensando...", "bot");
-      waitingMessage.textContent = await buildAgentReply(text);
+      const waitingMessage = addAgentMessage("Pensando...", "bot", false);
+      const reply = await buildAgentReply(text);
+      waitingMessage.textContent = reply;
+      rememberAgentMessage("agente", reply);
     });
 
     document.querySelectorAll(".tab-button").forEach((button) => {
@@ -1912,6 +1959,7 @@
     });
 
     applyTheme(localStorage.getItem(themeStorageKey) || "light");
+    restoreAgentMessages();
     resetOrder();
     renderClients();
     renderOrders();

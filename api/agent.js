@@ -1,9 +1,11 @@
 const agentInstructions = [
-  "Voce e o Agente JocaTech, um assistente para um sistema de ordem de servico.",
+  "Voce e o Agente JocaTech, um assistente de atendimento ao cliente no site da JocaTech.",
   "Fale de forma acolhedora, educada e humana, como um atendente tecnico prestativo.",
   "Cumprimente de forma natural quando o usuario iniciar a conversa.",
   "Responda sempre em portugues do Brasil, de forma curta, clara e util.",
   "Identifique palavras-chave como cliente, OS, ordem, total, tecnico, status, desconto, telefone, equipamento, defeito, problema, itens, resumo e campos faltantes.",
+  "Se o cliente pedir informacoes de uma OS sem se identificar, solicite numero da OS ou telefone cadastrado.",
+  "Se o cliente pedir para falar com uma pessoa, informe que vai encaminhar para a equipe JocaTech.",
   "Antes de passar uma mensagem final com dados da OS, confira se faltam informacoes importantes e solicite esses dados ao usuario.",
   "Use apenas o contexto enviado pelo sistema para falar de clientes, ordens, valores e status.",
   "Nao invente dados. Se faltar informacao, diga exatamente o que precisa ser preenchido.",
@@ -78,6 +80,36 @@ function wantsOrderInfo(text) {
   ]);
 }
 
+function wantsHuman(text) {
+  return hasAny(text, [
+    "humano",
+    "atendente",
+    "pessoa",
+    "falar com alguem",
+    "falar com alguém",
+    "suporte",
+    "tecnico agora",
+    "técnico agora",
+    "ligar",
+    "telefone da loja"
+  ]);
+}
+
+function hasAnyIdentification(context) {
+  return Boolean(
+    context?.matchedOrder ||
+    context?.matchedClient ||
+    context?.session?.orderNumber ||
+    context?.session?.phone ||
+    context?.session?.name
+  );
+}
+
+function looksLikeIdentificationOnly(text) {
+  const digits = text.replace(/\D/g, "");
+  return digits.length >= 8 || /\bOS[-\s]?\d{6,}[-\s]?\d{0,6}\b/i.test(text);
+}
+
 function missingFields(order) {
   const labels = {
     clientName: "cliente",
@@ -135,7 +167,15 @@ function buildLocalIntentReply(message, context) {
   const ordersCount = Number(context?.ordersCount) || 0;
   const clientMode = Boolean(context?.clientMode);
 
+  if (wantsHuman(text)) {
+    return "Claro. Vou deixar seu atendimento pronto para a equipe JocaTech continuar. Se puder, envie tambem seu nome, telefone e numero da OS para agilizar.";
+  }
+
   if (hasAny(text, ["oi", "ola", "olá", "bom dia", "boa tarde", "boa noite", "iniciar", "começar", "comecar"])) {
+    if (clientMode && context?.matchedOrder) {
+      return `Ola, encontrei seu atendimento. A OS ${order.orderNumber || "sem numero"} esta com status "${order.status || "nao informado"}". Como posso te ajudar agora?`;
+    }
+
     return clientMode
       ? "Ola, seja bem-vindo a JocaTech. Para eu localizar seu atendimento, me informe o numero da OS ou o telefone cadastrado."
       : "Ola, seja bem-vindo a JocaTech. Estou aqui para te ajudar com a ordem de servico. Voce quer consultar o total, revisar os dados da OS ou preparar uma mensagem para o cliente?";
@@ -147,8 +187,16 @@ function buildLocalIntentReply(message, context) {
       : "Claro. Posso te ajudar com total da OS, dados do cliente, tecnico, status, equipamento, defeito, itens, resumo da OS e campos faltantes. Se quiser, diga: 'preparar mensagem da OS'.";
   }
 
+  if (clientMode && !context?.matchedOrder && hasAnyIdentification(context)) {
+    return "Obrigado. Ainda nao encontrei uma OS com esses dados. Confira se o numero da OS ou telefone cadastrado esta correto, ou envie outro dado para eu tentar localizar.";
+  }
+
   if (clientMode && wantsOrderInfo(text) && !hasOrderIdentity(context)) {
     return "Consigo te ajudar com isso. Antes, preciso localizar seu atendimento: por favor, envie o numero da OS ou o telefone cadastrado.";
+  }
+
+  if (clientMode && looksLikeIdentificationOnly(message) && !context?.matchedOrder) {
+    return "Recebi sua identificacao, mas nao localizei uma OS vinculada a ela. Pode conferir o numero da OS ou enviar o telefone cadastrado com DDD?";
   }
 
   if (hasAny(text, ["faltando", "falta", "pendente", "preencher", "completo", "completa"])) {
@@ -226,6 +274,10 @@ function buildLocalIntentReply(message, context) {
     return `Ha ${clientsCount} cliente(s) cadastrado(s) e ${ordersCount} ordem(ns) salva(s).`;
   }
 
+  if (clientMode && !hasOrderIdentity(context)) {
+    return "Entendi. Para eu te atender com seguranca, me envie o numero da OS ou o telefone cadastrado. Assim consigo localizar seu atendimento e responder com os dados corretos.";
+  }
+
   return null;
 }
 
@@ -255,6 +307,9 @@ module.exports = async function handler(request, response) {
 
   async function askGemini(message, context) {
     const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+    const history = Array.isArray(context?.history)
+      ? context.history.slice(-10).map((item) => `${item.role}: ${item.text}`).join("\n")
+      : "";
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
       {
@@ -273,6 +328,7 @@ module.exports = async function handler(request, response) {
               parts: [
                 {
                   text: `Contexto atual do sistema:\n${JSON.stringify(context, null, 2)}\n\nMensagem do usuario:\n${message}`
+                    + (history ? `\n\nHistorico recente da conversa:\n${history}` : "")
                 }
               ]
             }
@@ -299,6 +355,9 @@ module.exports = async function handler(request, response) {
   }
 
   async function askOpenAI(message, context) {
+    const history = Array.isArray(context?.history)
+      ? context.history.slice(-10).map((item) => `${item.role}: ${item.text}`).join("\n")
+      : "";
     const openaiResponse = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -315,6 +374,7 @@ module.exports = async function handler(request, response) {
               {
                 type: "input_text",
                 text: `Contexto atual do sistema:\n${JSON.stringify(context, null, 2)}\n\nMensagem do usuario:\n${message}`
+                  + (history ? `\n\nHistorico recente da conversa:\n${history}` : "")
               }
             ]
           }
