@@ -1083,12 +1083,12 @@
       <div class="agent-header">
         <div>
           <strong>Agente JocaTech</strong>
-          <span>Assistente da ordem de serviço</span>
+          <span>Atendimento ao cliente</span>
         </div>
         <button class="agent-close" id="agentCloseBtn" type="button" aria-label="Fechar agente">×</button>
       </div>
       <div class="agent-messages" id="agentMessages">
-        <div class="agent-message bot">Olá, seja bem-vindo à JocaTech. Estou aqui para te ajudar com a ordem de serviço. Você quer consultar dados da OS ou preparar uma mensagem para o cliente?</div>
+        <div class="agent-message bot">Olá, seja bem-vindo à JocaTech. Para consultar seu atendimento, me informe o número da OS ou o telefone cadastrado.</div>
       </div>
       <form class="agent-form" id="agentForm">
         <input id="agentInput" autocomplete="off" placeholder="Digite sua mensagem...">
@@ -1119,6 +1119,11 @@
     const agentForm = document.getElementById("agentForm");
     const agentInput = document.getElementById("agentInput");
     const agentMessages = document.getElementById("agentMessages");
+    const agentSession = {
+      orderNumber: "",
+      phone: "",
+      name: ""
+    };
 
     const fields = [
       "orderNumber",
@@ -1557,11 +1562,64 @@
       return message;
     }
 
+    function onlyDigits(value) {
+      return String(value || "").replace(/\D/g, "");
+    }
+
+    function updateAgentSession(text) {
+      const orderMatch = String(text).match(/\bOS[-\s]?\d{6,}[-\s]?\d{0,6}\b/i);
+      const phoneDigits = onlyDigits(text);
+      const nameMatch = String(text).match(/(?:meu nome e|meu nome é|sou o|sou a|aqui e|aqui é)\s+([a-zA-ZÀ-ÿ\s]{3,})/i);
+
+      if (orderMatch) {
+        agentSession.orderNumber = orderMatch[0].replace(/\s+/g, "-").toUpperCase();
+      }
+
+      if (phoneDigits.length >= 8) {
+        agentSession.phone = phoneDigits;
+      }
+
+      if (nameMatch) {
+        agentSession.name = nameMatch[1].trim();
+      }
+    }
+
+    function findMatchedOrder() {
+      const orders = loadOrders();
+      const phone = onlyDigits(agentSession.phone);
+      const orderNumber = normalize(agentSession.orderNumber);
+
+      return orders.find((order) => {
+        const data = order.data || {};
+        const sameOrder = orderNumber && normalize(data.orderNumber || order.id).includes(orderNumber);
+        const samePhone = phone && onlyDigits(data.clientPhone).includes(phone);
+        return sameOrder || samePhone;
+      }) || null;
+    }
+
+    function findMatchedClient() {
+      const clients = loadClients();
+      const phone = onlyDigits(agentSession.phone);
+      const name = normalize(agentSession.name);
+
+      return clients.find((client) => {
+        const samePhone = phone && onlyDigits(client.phone).includes(phone);
+        const sameName = name && normalize(client.name).includes(name);
+        return samePhone || sameName;
+      }) || null;
+    }
+
     function agentContext() {
       const totals = updateTotals();
       const order = Object.fromEntries(fields.map((id) => [id, getValue(id)]));
+      const matchedOrder = findMatchedOrder();
+      const matchedClient = findMatchedClient();
 
       return {
+        clientMode: true,
+        session: { ...agentSession },
+        matchedOrder,
+        matchedClient,
         order,
         totals,
         items: readItems(),
@@ -1818,6 +1876,7 @@
       if (!text) return;
 
       addAgentMessage(text, "user");
+      updateAgentSession(text);
       agentInput.value = "";
       const waitingMessage = addAgentMessage("Pensando...", "bot");
       waitingMessage.textContent = await buildAgentReply(text);

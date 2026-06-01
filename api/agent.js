@@ -35,11 +35,47 @@ function hasAny(text, words) {
 }
 
 function currentOrder(context) {
-  return context?.order || {};
+  return context?.matchedOrder?.data || context?.order || {};
 }
 
 function currentTotals(context) {
-  return context?.totals || {};
+  return context?.matchedOrder?.totals || context?.totals || {};
+}
+
+function currentItems(context) {
+  return Array.isArray(context?.matchedOrder?.items)
+    ? context.matchedOrder.items
+    : Array.isArray(context?.items)
+      ? context.items
+      : [];
+}
+
+function hasOrderIdentity(context) {
+  const order = currentOrder(context);
+  return Boolean(order.orderNumber || order.clientPhone || context?.matchedOrder);
+}
+
+function wantsOrderInfo(text) {
+  return hasAny(text, [
+    "os",
+    "ordem",
+    "servico",
+    "serviço",
+    "status",
+    "andamento",
+    "total",
+    "valor",
+    "preco",
+    "preço",
+    "equipamento",
+    "problema",
+    "defeito",
+    "tecnico",
+    "técnico",
+    "prazo",
+    "previsao",
+    "previsão"
+  ]);
 }
 
 function missingFields(order) {
@@ -94,16 +130,25 @@ function buildLocalIntentReply(message, context) {
   const text = normalizeText(message);
   const order = currentOrder(context);
   const totals = currentTotals(context);
-  const items = Array.isArray(context?.items) ? context.items : [];
+  const items = currentItems(context);
   const clientsCount = Number(context?.clientsCount) || 0;
   const ordersCount = Number(context?.ordersCount) || 0;
+  const clientMode = Boolean(context?.clientMode);
 
   if (hasAny(text, ["oi", "ola", "olá", "bom dia", "boa tarde", "boa noite", "iniciar", "começar", "comecar"])) {
-    return "Olá, seja bem-vindo à JocaTech. Estou aqui para te ajudar com a ordem de serviço. Você quer consultar o total, revisar os dados da OS ou preparar uma mensagem para o cliente?";
+    return clientMode
+      ? "Ola, seja bem-vindo a JocaTech. Para eu localizar seu atendimento, me informe o numero da OS ou o telefone cadastrado."
+      : "Ola, seja bem-vindo a JocaTech. Estou aqui para te ajudar com a ordem de servico. Voce quer consultar o total, revisar os dados da OS ou preparar uma mensagem para o cliente?";
   }
 
   if (hasAny(text, ["ajuda", "comandos", "o que voce faz", "o que vc faz"])) {
-    return "Claro. Posso te ajudar com total da OS, dados do cliente, técnico, status, equipamento, defeito, itens, resumo da OS e campos faltantes. Se quiser, diga: 'preparar mensagem da OS'.";
+    return clientMode
+      ? "Claro. Posso ajudar a consultar status da OS, equipamento, valor, tecnico responsavel e previsao. Para comecar, me envie o numero da OS ou telefone cadastrado."
+      : "Claro. Posso te ajudar com total da OS, dados do cliente, tecnico, status, equipamento, defeito, itens, resumo da OS e campos faltantes. Se quiser, diga: 'preparar mensagem da OS'.";
+  }
+
+  if (clientMode && wantsOrderInfo(text) && !hasOrderIdentity(context)) {
+    return "Consigo te ajudar com isso. Antes, preciso localizar seu atendimento: por favor, envie o numero da OS ou o telefone cadastrado.";
   }
 
   if (hasAny(text, ["faltando", "falta", "pendente", "preencher", "completo", "completa"])) {
